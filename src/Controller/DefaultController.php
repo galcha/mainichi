@@ -14,6 +14,7 @@ class DefaultController Extends Controller
      */
     public function wordOfTheDayAction(WordHelper $wordHelper)
     {
+
         $wordHelper->getWordOfTheDay();
 
         return new JsonResponse(
