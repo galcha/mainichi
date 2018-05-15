@@ -22,18 +22,22 @@ class WordHelper {
         $this->cache = new FilesystemCache();
     }
 
-    public function getWordOfTheDay()
+    /**
+     * Returns the current top of the pile of saved words.
+     * The offset is defined by client when using the refresh function.
+     * Every day, the top of the pile is poped, ensuring a new word.
+     * @param int $offset
+     * @return mixed
+     */
+    public function getWordOfTheDay($offset = 0)
     {
-        if (!$this->cache->has('word')) {
-            /* @TODO : allow other APIs */
-            $words = json_decode($this->client->request('GET', 'http://jisho.org/api/v1/search/words?keyword=jlpt-n5')->getBody()->getContents());
-            $words = $this->formatJishoResponse($words);
-            $randomKey = random_int(0, count($words) - 1);
-
-            $this->cache->set('word', $words[$randomKey], strtotime('tomorrow') - time());
+        if (!$this->cache->has('words')) {
+            $words = $this->initWordsOfTheDay();
+        } else {
+            $words = $this->cache->get('words');
         }
 
-        return $this->cache->get('word');
+        return $words[$offset];
     }
 
     /**
@@ -54,5 +58,31 @@ class WordHelper {
         }
 
         return $return;
+    }
+
+    /**
+     * Used for initial warming of the cache
+     * @return object
+     */
+    private function initWordsOfTheDay()
+    {
+        $words = json_decode($this->client->request('GET', 'https://jisho.org/api/v1/search/words?keyword=common&page='.rand(1, 30))->getBody()->getContents());
+        $words = $this->formatJishoResponse($words);
+        $this->cache->set('words', $words, strtotime('next month') - time());
+
+        return $words;
+    }
+
+
+    /**
+     * Used for daily cache warmingu
+     * @return object
+     */
+    private function fetchNewRandomWord()
+    {
+        $words = json_decode($this->client->request('GET', 'https://jisho.org/api/v1/search/words?keyword=common&page='.rand(1, 30))->getBody()->getContents());
+        $words = $this->formatJishoResponse($words);
+
+        return $words[rand(1, 9)];
     }
 }
