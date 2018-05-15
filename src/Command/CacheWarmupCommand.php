@@ -3,12 +3,12 @@
 namespace App\Command;
 
 use App\Helper\WordHelper;
-use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Cache\Simple\FilesystemCache;
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class DailyCacheRestoreCommand extends ContainerAwareCommand
+class CacheWarmupCommand extends Command
 {
     /**
      * @var WordHelper
@@ -26,19 +26,15 @@ class DailyCacheRestoreCommand extends ContainerAwareCommand
 
     protected function configure()
     {
-        $this->setName('refresh:daily');
+        $this->setName('cache:warmup');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         /** @var FilesystemCache $cache */
         $cache = new FilesystemCache();
-        $words = $cache->get('words');
-        array_shift($words);
+        $cache->delete('words');
 
-        $word = $this->wordHelper->fetchNewRandomWord();
-        array_push($words, $word);
-        $cache->set('words', $words);
-
+        $this->wordHelper->initWordsOfTheDay();
     }
 }

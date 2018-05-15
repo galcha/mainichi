@@ -37,7 +37,7 @@ class WordHelper {
             $words = $this->cache->get('words');
         }
 
-        return $words[$offset];
+        return $words[$offset%19];
     }
 
     /**
@@ -64,9 +64,9 @@ class WordHelper {
      * Used for initial warming of the cache
      * @return object
      */
-    private function initWordsOfTheDay()
+    public function initWordsOfTheDay()
     {
-        $words = json_decode($this->client->request('GET', 'https://jisho.org/api/v1/search/words?keyword=common&page='.rand(1, 30))->getBody()->getContents());
+        $words = json_decode($this->client->request('GET', 'https://jisho.org/api/v1/search/words?keyword=%23common&page='.rand(1, 15))->getBody()->getContents());
         $words = $this->formatJishoResponse($words);
         $this->cache->set('words', $words, strtotime('next month') - time());
 
@@ -78,11 +78,11 @@ class WordHelper {
      * Used for daily cache warmingu
      * @return object
      */
-    private function fetchNewRandomWord()
+    public function fetchNewRandomWord()
     {
-        $words = json_decode($this->client->request('GET', 'https://jisho.org/api/v1/search/words?keyword=common&page='.rand(1, 30))->getBody()->getContents());
+        $words = json_decode($this->client->request('GET', 'https://jisho.org/api/v1/search/words?keyword=%23common&page='.rand(1, 30))->getBody()->getContents());
         $words = $this->formatJishoResponse($words);
 
-        return $words[rand(1, 9)];
+        return $words[rand(0, 19)];
     }
 }
